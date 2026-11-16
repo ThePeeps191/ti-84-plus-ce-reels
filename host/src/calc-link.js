@@ -132,11 +132,16 @@ class CalcLink extends EventEmitter {
     return this._write(encode(T.MODE, Buffer.from([bpp])));
   }
 
-  // Resolves true when the calculator has applied the BLIT, false on timeout/disconnect.
-  async blit(rect) {
+  // Resolves once fewer than MAX_IN_FLIGHT BLITs are unacknowledged (or the link drops).
+  async waitForSlot() {
     while (this.connected && this.pendingAcks.length >= MAX_IN_FLIGHT) {
       await new Promise(r => this.slotWaiters.push(r));
     }
+  }
+
+  // Resolves true when the calculator has applied the BLIT, false on timeout/disconnect.
+  async blit(rect) {
+    await this.waitForSlot();
     if (!this.connected) return false;
     return new Promise(resolve => {
       const entry = { resolve };
