@@ -3,7 +3,7 @@
 
 const MAGIC = 0xA5;
 const HEADER = 5;
-const PROTO_VERSION = 1;
+const PROTO_VERSION = 2;
 
 const T = {
   // host -> calc
@@ -20,7 +20,8 @@ const T = {
   C_DUMP: 0x85,
 };
 
-const KEYS = { UP: 1, DOWN: 2, ENTER: 3, SECOND: 4, ALPHA: 5 };
+// KEY payload: keypad scan code = group * 8 + bit, matching keypadc.h (kb_KeyUp = group 7 bit 3, ...).
+const KEYS = { SECOND: 1 * 8 + 5, MODE: 1 * 8 + 6, DEL: 1 * 8 + 7, ALPHA: 2 * 8 + 7, ENTER: 6 * 8 + 0, CLEAR: 6 * 8 + 6, DOWN: 7 * 8 + 0, LEFT: 7 * 8 + 1, RIGHT: 7 * 8 + 2, UP: 7 * 8 + 3 };
 
 function encode(type, payload = Buffer.alloc(0)) {
   const len = payload.length;

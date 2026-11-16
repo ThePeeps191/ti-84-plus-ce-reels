@@ -13,10 +13,11 @@ The laptop does the work. A dedicated Chrome window plays the reel, and that's w
 | ▲ / ▼ | previous / next reel |
 | [enter] | pause / play |
 | [2nd] | like / unlike (on your real account) |
+| [mode] | repost / undo repost (on your real account) |
 | [alpha] | switch 16 colors (~12 fps) ↔ 256 colors (~5 fps) |
 | [clear] | quit |
 
-The screen shows the username on the left, the reel (136×240) in the middle, and likes, comments and key hints on the right.
+The screen shows the username on the left, the reel (136×240) in the middle, and likes, comments, reposts and key hints on the right.
 
 ## Daily use
 
@@ -50,7 +51,7 @@ You can start either side first, and either side reconnects if you restart it. T
 
 ### Wire protocol (summary)
 
-Each frame is `0xA5, type, len (u24 LE), payload`. The host sends `HELLO`, `MODE(bpp)`, `BLIT(x,y,w,h,palette slice,pixels)`, `DUMP` and `QUIT`. The calculator sends `HELLO`, `ACK` (one per BLIT, at most 2 in flight), `KEY`, `BYE` and `DUMP`. See `host/src/protocol.js` and `calc/src/proto.h`.
+Each frame is `0xA5, type, len (u24 LE), payload`. The host sends `HELLO`, `MODE(bpp)`, `BLIT(x,y,w,h,palette slice,pixels)`, `DUMP` and `QUIT`. The calculator sends `HELLO`, `ACK` (one per BLIT, at most 2 in flight), `KEY` (a keypad scan code, group×8+bit, for any key except [clear], so new controls only need laptop changes), `BYE` and `DUMP`. See `host/src/protocol.js` and `calc/src/proto.h`.
 
 ## Notes
 

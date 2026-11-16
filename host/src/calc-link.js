@@ -71,6 +71,7 @@ class CalcLink extends EventEmitter {
         this.bpp = hello[1];
         this.connected = true;
         this.log(`calculator says hello (protocol ${hello[0]}, ${this.bpp}bpp)`);
+        if (hello[0] !== PROTO_VERSION) this.log(`WARNING: calculator program speaks protocol ${hello[0]}, this app expects ${PROTO_VERSION}; reinstall it with npm run deploy`);
         this.emit('connect', { bpp: this.bpp });
         return;
       }

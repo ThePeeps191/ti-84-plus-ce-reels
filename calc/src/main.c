@@ -8,20 +8,16 @@
 
 #include <keypadc.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <time.h>
 
 #define KEY_SCAN_INTERVAL (CLOCKS_PER_SEC / 50) /* 20 ms */
 
 enum { ST_NONE, ST_NO_USB, ST_NO_HOST, ST_STREAMING };
 
-static const struct { kb_lkey_t lkey; uint8_t code; } key_map[] = {
-    { kb_KeyUp, KEY_UP },
-    { kb_KeyDown, KEY_DOWN },
-    { kb_KeyEnter, KEY_ENTER },
-    { kb_Key2nd, KEY_SECOND },
-    { kb_KeyAlpha, KEY_ALPHA },
-};
-#define NUM_KEYS (sizeof key_map / sizeof key_map[0])
+/* Key presses are reported as keypad scan codes (group * 8 + bit, see keypadc.h),
+ * so the laptop decides what every key does without changing this program. */
+#define SCAN_CLEAR (6 * 8 + 6)
 
 int main(void) {
     display_init();
@@ -35,7 +31,7 @@ int main(void) {
         return 1;
     }
 
-    bool was_down[NUM_KEYS] = { false };
+    uint8_t prev_keys[8] = { 0 };
     bool was_open = false;
     int shown = ST_NONE;
     clock_t next_scan = 0;
@@ -65,11 +61,16 @@ int main(void) {
             next_scan = now + KEY_SCAN_INTERVAL;
             kb_Scan();
             if (kb_IsDown(kb_KeyClear)) break;
-            for (unsigned i = 0; i < NUM_KEYS; i++) {
-                bool down = kb_IsDown(key_map[i].lkey);
-                if (down && !was_down[i] && open && proto_host_active())
-                    proto_send_key(key_map[i].code);
-                was_down[i] = down;
+            for (uint8_t group = 1; group <= 7; group++) {
+                uint8_t now = kb_Data[group];
+                uint8_t pressed = now & (uint8_t)~prev_keys[group];
+                prev_keys[group] = now;
+                if (!pressed || !open || !proto_host_active()) continue;
+                for (uint8_t bit = 0; bit < 8; bit++) {
+                    uint8_t code = (uint8_t)(group * 8 + bit);
+                    if ((pressed & (1 << bit)) && code != SCAN_CLEAR)
+                        proto_send_key(code);
+                }
             }
         }
     }

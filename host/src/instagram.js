@@ -57,6 +57,26 @@ class Instagram {
     return ok;
   }
 
+  // Repost / undo repost. If Instagram answers with a confirmation dialog or menu, pick its
+  // "Repost"/"Remove"/"Undo" option; anything unexpected is logged and dismissed.
+  async toggleRepost() {
+    const before = await this.info();
+    if (!(await this._click('repost'))) { this.log('repost button not found'); return false; }
+    await this.page.waitForTimeout(700);
+    const dlg = await this._call('dialog');
+    if (dlg) {
+      this.log(`repost opened a dialog: ${JSON.stringify(dlg)}`);
+      const pattern = before.reposted ? '^(remove|undo|delete)' : '^repost$';
+      const pt = await this._call('dialogButton', pattern);
+      if (pt) await this.page.mouse.click(pt.x, pt.y);
+      else await this.page.keyboard.press('Escape');
+      await this.page.waitForTimeout(500);
+    }
+    const after = await this.info();
+    this.log(`repost: ${before.reposted ? 'reposted' : 'not reposted'} -> ${after.reposted ? 'reposted' : 'not reposted'} (count ${before.reposts || '-'} -> ${after.reposts || '-'})`);
+    return true;
+  }
+
   // Instagram starts reels muted; click its speaker button once (the choice sticks for later reels).
   async ensureSound() {
     for (let attempt = 0; attempt < 2; attempt++) {

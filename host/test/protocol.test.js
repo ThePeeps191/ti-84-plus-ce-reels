@@ -12,7 +12,7 @@ test('round trip single message', () => {
   const msgs = d.push(encode(T.KEY, Buffer.from([KEYS.DOWN])));
   assert.strictEqual(msgs.length, 1);
   assert.strictEqual(msgs[0].type, T.KEY);
-  assert.deepStrictEqual([...msgs[0].payload], [2]);
+  assert.deepStrictEqual([...msgs[0].payload], [56]);
 });
 
 test('message split across three chunks', () => {
@@ -61,4 +61,13 @@ test('blitPayload layout', () => {
     0xff, 0x7f, 0x01, 0x00, // palette u16 LE
     0xab,                // pixels
   ]);
+});
+
+test('KEYS are keypadc scan codes (group * 8 + bit)', () => {
+  assert.strictEqual(KEYS.UP, 59);     // kb_KeyUp    = group 7, bit 3
+  assert.strictEqual(KEYS.DOWN, 56);   // kb_KeyDown  = group 7, bit 0
+  assert.strictEqual(KEYS.ENTER, 48);  // kb_KeyEnter = group 6, bit 0
+  assert.strictEqual(KEYS.SECOND, 13); // kb_Key2nd   = group 1, bit 5
+  assert.strictEqual(KEYS.MODE, 14);   // kb_KeyMode  = group 1, bit 6
+  assert.strictEqual(KEYS.ALPHA, 23);  // kb_KeyAlpha = group 2, bit 7
 });

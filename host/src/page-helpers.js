@@ -2,7 +2,7 @@
 // Installed by evaluating this function through CDP, so Instagram's CSP (no eval) does not apply.
 // Selectors are structural (aria-labels, hrefs, positions); Instagram's class names change often.
 
-const HELPERS_VERSION = 3;
+const HELPERS_VERSION = 4;
 
 function installHelpers(version) {
   if (window.__reels && window.__reels.version === version) return;
@@ -22,11 +22,12 @@ function installHelpers(version) {
   };
 
   const icon = (c, label) => c.querySelector(`svg[aria-label="${label}"]`);
+  const repostIcon = c => icon(c, 'Repost') || [...c.querySelectorAll('svg[aria-label]')].find(s => /repost/i.test(s.getAttribute('aria-label')));
 
   const info = () => {
     const loggedIn = !location.pathname.startsWith('/accounts/login') && !document.querySelector('input[name="password"]');
     const found = locate();
-    const res = { loggedIn, url: location.href, id: '', hasVideo: !!found, paused: false, muted: false, username: '', likes: '', comments: '', liked: false };
+    const res = { loggedIn, url: location.href, id: '', hasVideo: !!found, paused: false, muted: false, username: '', likes: '', comments: '', reposts: '', liked: false, reposted: false };
     if (!found) return res;
     const { video, container } = found;
     res.id = (location.pathname.match(/\/reels?\/([^/]+)/) || [])[1] || video.currentSrc;
@@ -52,8 +53,14 @@ function installHelpers(version) {
       return hit ? hit.t : '';
     };
     const commentSvg = icon(container, 'Comment');
+    const repostSvg = repostIcon(container);
+    const shareSvg = icon(container, 'Share');
     res.likes = below(likeSvg, commentSvg);
-    res.comments = below(commentSvg, icon(container, 'Repost') || icon(container, 'Share'));
+    res.comments = below(commentSvg, repostSvg || shareSvg);
+    res.reposts = below(repostSvg, shareSvg);
+    // Reposted: either the label changes or the icon gets a different color than its neighbours.
+    const color = el => (el ? getComputedStyle(el).color : '');
+    res.reposted = !!repostSvg && (repostSvg.getAttribute('aria-label') !== 'Repost' || (!!commentSvg && color(repostSvg) !== color(commentSvg)));
     return res;
   };
 
@@ -65,6 +72,7 @@ function installHelpers(version) {
     let s = null;
     if (kind === 'like') s = icon(c, 'Unlike') || icon(c, 'Like');
     if (kind === 'mute') s = icon(c, 'Audio is muted');
+    if (kind === 'repost') s = repostIcon(c);
     if (!s) return null;
     const el = s.closest('[role=button],button') || s;
     const r = el.getBoundingClientRect();
@@ -112,7 +120,25 @@ function installHelpers(version) {
     return btoa(s);
   };
 
-  window.__reels = { version, locate, info, point, togglePause, scrollNeighbour, grab };
+  // A visible dialog/menu (e.g. opened by the repost button): its text and button labels.
+  const dialog = () => {
+    const d = [...document.querySelectorAll('[role=dialog], [role=menu]')].find(e => e.getBoundingClientRect().width > 0);
+    if (!d) return null;
+    const buttons = [...d.querySelectorAll('[role=button], button, [role=menuitem]')].map(b => (b.innerText || b.getAttribute('aria-label') || '').trim()).filter(Boolean);
+    return { text: (d.innerText || '').trim().slice(0, 200), buttons: buttons.slice(0, 12) };
+  };
+  // Screen point of a dialog button whose label matches the regex source.
+  const dialogButton = pattern => {
+    const re = new RegExp(pattern, 'i');
+    const d = [...document.querySelectorAll('[role=dialog], [role=menu]')].find(e => e.getBoundingClientRect().width > 0);
+    if (!d) return null;
+    const b = [...d.querySelectorAll('[role=button], button, [role=menuitem]')].find(x => re.test((x.innerText || x.getAttribute('aria-label') || '').trim()));
+    if (!b) return null;
+    const r = b.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  };
+
+  window.__reels = { version, locate, info, point, togglePause, scrollNeighbour, grab, dialog, dialogButton };
 }
 
 async function ensureHelpers(page) {

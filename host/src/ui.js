@@ -95,16 +95,27 @@ function pageRenderPanels(s) {
     g.lineTo(cx + r + 1, cy + r + 1); g.closePath();
     g.strokeStyle = WHITE; g.lineWidth = 2; g.stroke();
   };
+  // Two arrows chasing each other (Instagram's repost glyph), red when reposted.
+  const repost = (cx, cy, on) => {
+    g.strokeStyle = on ? RED : WHITE; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(cx - 8, cy + 2); g.lineTo(cx - 8, cy - 5); g.lineTo(cx + 6, cy - 5); g.stroke();
+    g.beginPath(); g.moveTo(cx + 3, cy - 8); g.lineTo(cx + 7, cy - 5); g.lineTo(cx + 3, cy - 2); g.stroke();
+    g.beginPath(); g.moveTo(cx + 8, cy - 2); g.lineTo(cx + 8, cy + 5); g.lineTo(cx - 6, cy + 5); g.stroke();
+    g.beginPath(); g.moveTo(cx - 3, cy + 2); g.lineTo(cx - 7, cy + 5); g.lineTo(cx - 3, cy + 8); g.stroke();
+  };
   heart(ox + 20, 22, 16, !!s.liked);
   g.font = 'bold 12px Arial'; g.fillStyle = s.liked ? RED : WHITE;
   g.fillText(s.likes || '-', ox + 36, 16);
   bubble(ox + 20, 56, 8);
   g.fillStyle = WHITE; g.fillText(s.comments || '-', ox + 36, 50);
+  repost(ox + 20, 90, !!s.reposted);
+  g.font = 'bold 12px Arial'; g.fillStyle = s.reposted ? RED : WHITE;
+  g.fillText(s.reposts || '-', ox + 36, 84);
 
-  const hints = [['▲', 'prev'], ['▼', 'next'], ['enter', 'pause'], ['2nd', 'like'], ['alpha', 'colors'], ['clear', 'quit']];
+  const hints = [['▲', 'prev'], ['▼', 'next'], ['enter', 'pause'], ['2nd', 'like'], ['mode', 'repost'], ['alpha', 'colors'], ['clear', 'quit']];
   g.font = '10px Arial';
   hints.forEach(([k, v], i) => {
-    const yy = 128 + i * 18;
+    const yy = 118 + i * 17;
     g.fillStyle = WHITE; g.fillText(k, ox + 4, yy);
     g.fillStyle = GRAY; g.fillText(v, ox + 42, yy);
   });

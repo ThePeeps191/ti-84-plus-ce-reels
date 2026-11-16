@@ -8,7 +8,7 @@
  * Frame: 0xA5, type u8, len u24 LE, payload[len]. */
 
 #define PROTO_MAGIC   0xA5
-#define PROTO_VERSION 1
+#define PROTO_VERSION 2
 
 /* host -> calc */
 #define MSG_HELLO 0x01
@@ -23,11 +23,7 @@
 #define MSG_BYE     0x84
 #define MSG_C_DUMP  0x85
 
-#define KEY_UP     1
-#define KEY_DOWN   2
-#define KEY_ENTER  3
-#define KEY_SECOND 4
-#define KEY_ALPHA  5
+/* MSG_KEY payload: keypad scan code = group * 8 + bit (keypadc.h), e.g. up = 59, down = 56. */
 
 /* Forget any partial message (call when the link (re)opens). */
 void proto_reset(void);

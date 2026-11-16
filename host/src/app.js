@@ -86,6 +86,7 @@ class App {
       case KEYS.UP: this.userPaused = false; this.info = (await this.ig.prev()) || this.info; break;
       case KEYS.ENTER: this.userPaused = !(await this.ig.togglePause()); break;
       case KEYS.SECOND: await this.ig.toggleLike(); await sleep(400); break;
+      case KEYS.MODE: await this.ig.toggleRepost(); break;
       case KEYS.ALPHA:
         this.bpp = this.bpp === 4 ? 8 : 4;
         this.log(`color mode: ${this.bpp === 4 ? '16 colors (smooth)' : '256 colors'}`);
@@ -104,6 +105,8 @@ class App {
       this.status = !i.loggedIn ? 'Log in to Instagram on the laptop' : !i.hasVideo ? 'Loading reels...' : '';
       // Instagram sometimes pauses on its own (e.g. focus changes); keep playing unless the user paused.
       if (i.hasVideo && i.paused && !this.userPaused) await this.ig.togglePause();
+      // Instagram can re-mute (e.g. after scrolling or a reload); the laptop is the speaker, so keep sound on.
+      if (i.hasVideo && i.muted) await this.ig.ensureSound();
       await this._refreshPanels(false);
     } catch (e) {
       this.log('[instagram] ' + e.message);
@@ -125,7 +128,9 @@ class App {
       username: i.username || '',
       likes: i.likes || '',
       comments: i.comments || '',
+      reposts: i.reposts || '',
       liked: !!i.liked,
+      reposted: !!i.reposted,
       paused: this.userPaused,
       status: this.status,
     };
@@ -176,7 +181,7 @@ class App {
       lastFrames = this.frames; lastT = now;
       if (this.link.connected) {
         const i = this.info || {};
-        this.log(`streaming ${fps.toFixed(1)} fps, ${this.bpp === 4 ? '16' : '256'} colors | @${i.username || '?'} ♥${i.liked ? '(liked) ' : ''}${i.likes || '-'}${this.userPaused ? ' | paused' : ''}`);
+        this.log(`streaming ${fps.toFixed(1)} fps, ${this.bpp === 4 ? '16' : '256'} colors | @${i.username || '?'} ♥${i.liked ? '(liked) ' : ''}${i.likes || '-'} ⟲${i.reposted ? '(reposted) ' : ''}${i.reposts || '-'}${this.userPaused ? ' | paused' : ''}`);
       }
     }
   }
