@@ -20,8 +20,8 @@ Watch your live Instagram Reels feed on a TI-84 Plus CE that is tethered to a Wi
 |---|---|
 | Orientation | Upright. Video in the middle, side panels on both sides |
 | Video | 16-color (4bpp) by default for smoothness; [alpha] toggles 256-color (8bpp) |
-| Controls | ▲ prev, ▼ next, [enter] pause/play, [2nd] like/unlike, [alpha] color mode, [clear] quit |
-| Side info | Username, like + comment counts (plus a "liked" heart), key hints. No caption |
+| Controls | ▲ prev, ▼ next, [enter] pause/play, [2nd] like/unlike, [mode] repost/undo (added later), [alpha] color mode, [clear] quit |
+| Side info | Username, like + comment + repost counts (with liked/reposted highlight), key hints. No caption |
 | Laptop window | Visible phone-sized Chrome window; may be covered (occlusion throttling disabled). Sound plays from it |
 | Startup | `npm start` (or a desktop shortcut) on the laptop; REELS launched from the arTIfiCE shell on the calculator; either side may start first and either side reconnects |
 
@@ -58,7 +58,7 @@ Frame: `0xA5, type u8, len u24 LE, payload[len]`.
 | H→C | `0x30 QUIT` | — (calc exits back to the shell) |
 | C→H | `0x81 HELLO` | `proto_version u8, bpp u8` |
 | C→H | `0x82 ACK` | `seq u8` (one per applied BLIT; the host keeps ≤ 2 BLITs in flight) |
-| C→H | `0x83 KEY` | `key u8` (1 up, 2 down, 3 enter, 4 2nd, 5 alpha) |
+| C→H | `0x83 KEY` | `scan u8`: keypad scan code `group*8+bit` (keypadc) for any key except [clear] (protocol v2; v1 sent 1–5) |
 | C→H | `0x84 BYE` | — |
 | C→H | `0x85 DUMP` | `bpp u8, palette[256] u16, vram[bpp*320*240/8]` |
 
